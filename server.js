@@ -1,7 +1,6 @@
 const express = require('express')
 const app = express()
 const bodyParser = require('body-parser')
-
 const cors = require('cors')
 
 const mongoose = require('mongoose')
@@ -12,10 +11,40 @@ app.use(cors())
 app.use(bodyParser.urlencoded({extended: false}))
 app.use(bodyParser.json())
 
+var Schema = mongoose.Schema;
+var userAndExercise = new Schema({
+  username: String,
+  count: Number,
+  log: [{description: String, duration: Number, date: {type: Date, default: Date.now}}]
+});
+
+var addUserAndUpdate = mongoose.model("addUserAndUpdate", userAndExercise);
 
 app.use(express.static('public'))
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/views/index.html')
+});
+
+app.post("/api/exercise/new-user", (req,res) => {
+  addUserAndUpdate.find().then(data => {
+    var databaseData = new addUserAndUpdate({username: req.body.username, count: 0});
+    data = data.filter((i) => i.username === req.body.username);
+    if(data.length === 0){
+      databaseData.save().then(result => {
+        res.json({username: result.username, userId: result._id});
+      }).catch(err => {
+        res.json({error: err});
+      });
+    }else{
+      res.json({message: "Username is already taken"});
+    }
+  });
+});
+
+app.get("/api/exercise/users", (req, res) => {
+  addUserAndUpdate.find().then(result => {
+    res.json(result);
+  });
 });
 
 
