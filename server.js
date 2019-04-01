@@ -44,7 +44,30 @@ app.post("/api/exercise/new-user", (req,res) => {
 app.get("/api/exercise/users", (req, res) => {
   addUserAndUpdate.find().then(result => {
     res.json(result);
+  }).catch(err => {
+    res.json({error: err});
   });
+});
+
+app.post("/api/exercise/add", (req, res) => {
+  var dataToAdd = {description: req.body.description, duration: req.body.duration, date: req.body.date};
+  var searchId = req.body.userId;
+  
+  if(req.body.description === "" || req.body.duration === ""){
+    res.json({message: "Please fill in all fields"});
+  }else{
+  addUserAndUpdate.findById(searchId).then(result => {
+    result.log.push(dataToAdd);
+    result.markModified('log');
+    result.save().then(data => {
+      res.json({message: "data saved"});
+    }).catch(err => {
+      res.json({message: "save not work"});
+    });
+  }).catch(err => {
+    res.json({error: "no Id"});
+  });
+  }
 });
 
 
