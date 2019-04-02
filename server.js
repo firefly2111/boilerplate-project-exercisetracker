@@ -15,7 +15,7 @@ var Schema = mongoose.Schema;
 var userAndExercise = new Schema({
   username: String,
   count: Number,
-  log: [{description: String, duration: Number, date: {type: Date, default: Date.now}}]
+  log: [{description: String, duration: Number, date: Date}]
 });
 
 var addUserAndUpdate = mongoose.model("addUserAndUpdate", userAndExercise);
@@ -27,7 +27,7 @@ app.get('/', (req, res) => {
 
 app.post("/api/exercise/new-user", (req,res) => {
   addUserAndUpdate.find().then(data => {
-    var databaseData = new addUserAndUpdate({username: req.body.username, count: 0});
+    var databaseData = new addUserAndUpdate({username: req.body.username, count: 0, log:[]});
     data = data.filter((i) => i.username === req.body.username);
     if(data.length === 0){
       databaseData.save().then(result => {
@@ -50,17 +50,17 @@ app.get("/api/exercise/users", (req, res) => {
 });
 
 app.post("/api/exercise/add", (req, res) => {
-  var dataToAdd = {description: req.body.description, duration: req.body.duration, date: req.body.date};
+  var date = req.body.date ? new Date(req.body.date) : new Date;
+  var dataToAdd = {description: req.body.description, duration: req.body.duration, date: date};
   var searchId = req.body.userId;
-  
   if(req.body.description === "" || req.body.duration === ""){
     res.json({message: "Please fill in all fields"});
   }else{
   addUserAndUpdate.findById(searchId).then(result => {
-    result.log.push(dataToAdd);
-    result.markModified('log');
+    result.log = result.log.concat(dataToAdd);
+    result.count = result.log.length;
     result.save().then(data => {
-      res.json({message: "data saved"});
+      res.json({message: data});
     }).catch(err => {
       res.json({message: "save not work"});
     });
@@ -69,6 +69,8 @@ app.post("/api/exercise/add", (req, res) => {
   });
   }
 });
+
+
 
 
 // Not found middleware
