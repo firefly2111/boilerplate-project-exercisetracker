@@ -70,7 +70,19 @@ app.post("/api/exercise/add", (req, res) => {
   }
 });
 
-
+app.get("/api/exercise/log", (req, res) => {
+  var searchIdQuery = req.query.userId;
+  var limitQuery = req.query.limit;
+  addUserAndUpdate.findById(searchIdQuery).then(result => {
+    if(limitQuery){;
+     res.json({username: result.username, count: result.count, log: result.log.slice(0, req.query.limit)}); 
+    }else{
+    res.json(result);
+    }
+  }).catch(err => {
+    res.json({message: "Search not work"});
+  });
+});
 
 
 // Not found middleware
